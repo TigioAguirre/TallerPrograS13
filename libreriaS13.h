@@ -2,9 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-
-
-
 #define LIMITE_CO 25000
 #define LIMITE_SO2 40 
 #define LIMITE_NO2 25
@@ -521,4 +518,594 @@ void menuExportacion(DatosHorarios datos[], int numDatos, ContaminanteInfo prome
     if (!exito && opcionExport >= 1 && opcionExport <= 3) {
         printf(" Error al exportar el archivo.\n");
     }
+}
+//REGRESION LINEAL
+//DEFINICION DE FUNCIONES
+    void procesarZona1();  
+    void procesarZona2();  
+    void procesarZona3();  
+    void procesarZona4();  
+    void procesarZona5();  
+    void procesarZona6();  
+    void procesarZona7();  
+    int contarLineas(char *nombreArchivo);
+    int obtenerDia(char *lineaOriginal);
+    double obtenerPenultimo(char *lineaOriginal);
+    float obtenerICA(char *lineaOriginal);
+//DIRECCIONES DE ARCHIVOS
+    char BaseDeDatosZ1[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\BELISARIO.csv";
+    char ArchivoSalidaZ1[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\BELISARIO_PROCESADO.csv";
+    char BaseDeDatosZ2[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\CAMAL.csv";
+    char ArchivoSalidaZ2[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\CAMAL_PROCESADO.csv";
+    char BaseDeDatosZ3[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\CARAPUNGO.csv";
+    char ArchivoSalidaZ3[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\CARAPUNGO_PROCESADO.csv";
+    char BaseDeDatosZ4[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\CENTRO.csv";
+    char ArchivoSalidaZ4[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\CENTRO_PROCESADO.csv";
+    char BaseDeDatosZ5[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\CHILLOS.csv";
+    char ArchivoSalidaZ5[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\CHILLOS_PROCESADO.csv";
+    char BaseDeDatosZ6[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\COTOCOLLAO.csv";
+    char ArchivoSalidaZ6[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\COTOCOLLAO_PROCESADO.csv";
+    char BaseDeDatosZ7[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\TUMBACO.csv";
+    char ArchivoSalidaZ7[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\TUMBACO_PROCESADO.csv";
+//DESARROLLO DE FUNCIONES
+int regresionLineal() {
+    int opcion;
+    char *dirZona = NULL;
+
+A:
+    printf("===============================================\n");
+    printf("|        SELECCIONE LA ZONA A PROYECTAR       |\n");
+    printf("===============================================\n");
+    printf("|1. Belisario                                 |\n");
+    printf("|2. El camal                                  |\n");
+    printf("|3. Carapungo                                 |\n");
+    printf("|4. Centro Historico de Quito                 |\n");
+    printf("|5. Valle de los Chillos                      |\n");
+    printf("|6. Cotocollao                                |\n");
+    printf("|7. Tumbaco                                   |\n");
+    printf("===============================================\n");
+    printf("Ingrese su opcion: ");
+    scanf("%d", &opcion);
+
+    switch (opcion) {
+        case 1: dirZona = ArchivoSalidaZ1; break;
+        case 2: dirZona = ArchivoSalidaZ2; break;
+        case 3: dirZona = ArchivoSalidaZ3; break;
+        case 4: dirZona = ArchivoSalidaZ4; break;
+        case 5: dirZona = ArchivoSalidaZ5; break;
+        case 6: dirZona = ArchivoSalidaZ6; break;
+        case 7: dirZona = ArchivoSalidaZ7; break;
+        default:
+            printf("===============================================\n");
+            printf("|       OPCION INVALIDA. INGRESE DE NUEVO      |\n");
+            goto A;
+    }
+
+    int n = contarLineas(dirZona);
+    printf("Numero de lineas en el archivo: %d\n", n);
+
+    FILE *archivo = fopen(dirZona, "r");
+    if (archivo == NULL) {
+        printf("Problema al abrir el archivo %s. Fin del programa.\n", dirZona);
+        exit(-1);
+    }
+
+    char linea[200];
+    fgets(linea, sizeof(linea), archivo); // Leer encabezado
+
+    double sumDias = 0.0;
+    double sumICA = 0.0;
+    double sumXY = 0.0;
+    double sumXX = 0.0;
+
+    for (int i = 0; i < n - 1; i++) {
+        if (fgets(linea, sizeof(linea), archivo) == NULL) break;
+
+        int dia = obtenerDia(linea);
+        double ica = obtenerPenultimo(linea);
+
+        sumDias += dia;
+        sumICA += ica;
+        sumXY += dia * ica;
+        sumXX += dia * dia;
+    }
+    fclose(archivo);
+
+    // n de datos sin encabezado:
+    int ndatos = n - 1;
+    double a, b;
+
+    a = ((ndatos * sumXY) - (sumDias * sumICA)) / ((ndatos * sumXX) - (sumDias * sumDias));
+    b = (sumICA - (a * sumDias)) / ndatos;
+
+    printf("Ecuacion de para la regresion: y = %lf * x + %lf\n", a, b);
+
+    double y;
+    printf("Ingrese valor para predecir ICA (dia): ");
+    scanf("%lf", &y);
+
+    double prediccion = a * y + b;
+    printf("Valor predicho de ICA para dia %.2lf: %.4lf\n", y, prediccion);
+
+    return prediccion;
+}
+int obtenerDia(char *lineaOriginal) {
+    char copia[200];
+    strcpy(copia, lineaOriginal);
+
+    char *token = strtok(copia, ",");
+    char *ultimo_token = NULL;
+
+    while (token != NULL) {
+        while (*token == ' ') token++;
+        ultimo_token = token;
+        token = strtok(NULL, ",");
+    }
+
+    if (ultimo_token != NULL) {
+        return atoi(ultimo_token);
+    } else {
+        return 0;
+    }
+}
+
+double obtenerPenultimo(char *lineaOriginal) {
+    char copia[1024];
+    strncpy(copia, lineaOriginal, sizeof(copia));
+    copia[sizeof(copia) - 1] = '\0';
+
+    char *token = strtok(copia, ",");
+    char *anterior = NULL;
+    char *actual = NULL;
+
+    while (token != NULL) {
+        while (*token == ' ') token++;
+        anterior = actual;
+        actual = token;
+        token = strtok(NULL, ",");
+    }
+
+    if (anterior != NULL) {
+        return atof(anterior);
+    } else {
+        return 0.0;
+    }
+}
+int contarLineas(char *nombreArchivo) {
+    FILE *arch = fopen(nombreArchivo, "r");
+    if (arch == NULL) {
+        printf("Problema al abrir el archivo %s. Fin del programa.\n", nombreArchivo);
+        exit(-1);
+    }
+    int n = 0;
+    char c;
+    while ((c = fgetc(arch)) != EOF) {
+        if (c == '\n') {
+            n++;
+        }
+    }
+    fclose(arch);
+    return n;
+}
+
+float obtenerICA(char *lineaOriginal) {
+    float ICAprom = 0;
+    int contador = 0, suma = 0;
+    char copia[100];
+    strcpy(copia, lineaOriginal);  // Copiamos para no dañar el original
+
+    char *token = strtok(copia, ","); // Leer fecha (1er campo)
+
+    for (int i = 0; i < 6; i++) {
+        token = strtok(NULL, ",");
+        if (token != NULL) {
+            // Eliminar espacios en blanco
+            while (*token == ' ') token++;
+
+            if (strlen(token) > 0 && token[0] != '\n') {
+                int valor = atoi(token);
+                suma += valor;
+                contador++;
+            }
+        }
+    }
+
+    if (contador > 0)
+        ICAprom = (float)suma / contador;
+    else
+        ICAprom = 0;
+
+    return ICAprom;
+}
+
+
+void MostrarCabecera() {
+    printf("\n");
+    printf("===============================================\n");
+    printf("|                    Air +                    |\n");
+    printf("|  Sistema Integral de Gestion y Prediccion   |\n");
+    printf("|         de Contaminacion del Aire           |\n");
+    printf("===============================================");
+}
+void opcionesDeZonas(){
+    printf("\n|            OPCIONES DE ZONAS                |\n");
+    printf("===============================================\n");
+    printf("|1. Belisario                                 |\n");
+    printf("|2. El camal                                  |\n");
+    printf("|3. Carapungo                                 |\n");
+    printf("|4. Centro Historico de Quito                 |\n");
+    printf("|5. Valle de los Chillos                      |\n");
+    printf("|6. Cotocollao                                |\n");
+    printf("|7. Tumbaco                                   |\n");
+    printf("===============================================\n");
+}
+void DesplegarMenu() {
+    printf("\n");
+    printf("===============================================\n");
+    printf("|               OPCIONES ZONALES              |\n");
+    printf("===============================================\n");
+    printf("| 1. Monitoreo de contaminacion actual        |\n");
+    printf("| 2. Prediccion de niveles futuros            |\n");
+    printf("| 3. Calculo de promedios historicos          |\n");
+    printf("| 4. Exportacion de datos                     |\n");
+    printf("| 5. Salir                                    |\n");
+    printf("===============================================\n");
+}
+
+void procesarZonas(){
+procesarZona1();  
+procesarZona2();  
+procesarZona3();  
+procesarZona4();  
+procesarZona5();  
+procesarZona6();  
+procesarZona7();  
+}
+
+int contadorInverso(int totalLineas, int lineaActual) {
+    return -lineaActual; // simplemente retorna el negativo de la línea actual
+}
+
+//PROCESAMIENTO DE DATOS POR ZONAS
+void procesarZona1() {
+    int total = contarLineas(BaseDeDatosZ1) - 1; // excluye encabezado
+    FILE *baseDatos = fopen(BaseDeDatosZ1, "r");
+    if (baseDatos == NULL) {
+        printf("Problema al abrir el archivo %s.\n", BaseDeDatosZ1);
+        exit(-1);
+    }
+
+    FILE *archSalida = fopen(ArchivoSalidaZ1, "w");
+    if (archSalida == NULL) {
+        printf("Problema al abrir el archivo %s.\n", ArchivoSalidaZ1);
+        exit(-1);
+    }
+
+    char linea[100];
+    fgets(linea, sizeof(linea), baseDatos); // Leer encabezado
+    linea[strcspn(linea, "\r\n")] = 0;
+    fprintf(archSalida, "%s,ICA,nDia\n", linea); // Escribir encabezado con ICA
+
+    int lineaActual = 0;
+    while (fgets(linea, sizeof(linea), baseDatos)) {
+        linea[strcspn(linea, "\r\n")] = 0;
+        float ICA = obtenerICA(linea);
+        int nDia = contadorInverso(total, lineaActual);
+        fprintf(archSalida, "%s,%.2f,%d\n", linea, ICA, nDia);
+        lineaActual++;
+    }
+
+    fclose(baseDatos);
+    fclose(archSalida);
+}
+
+void procesarZona2() {
+    int total = contarLineas(BaseDeDatosZ2) - 1; // excluye encabezado
+    FILE *baseDatos = fopen(BaseDeDatosZ2, "r");
+    if (baseDatos == NULL) {
+        printf("Problema al abrir el archivo %s.\n", BaseDeDatosZ2);
+        exit(-1);
+    }
+
+    FILE *archSalida = fopen(ArchivoSalidaZ2, "w");
+    if (archSalida == NULL) {
+        printf("Problema al abrir el archivo %s.\n", ArchivoSalidaZ2);
+        exit(-1);
+    }
+
+    char linea[100];
+    fgets(linea, sizeof(linea), baseDatos); // Leer encabezado
+    linea[strcspn(linea, "\r\n")] = 0;
+    fprintf(archSalida, "%s,ICA,nDia\n", linea); // Escribir encabezado con ICA
+
+    int lineaActual = 0;
+    while (fgets(linea, sizeof(linea), baseDatos)) {
+        linea[strcspn(linea, "\r\n")] = 0;
+        float ICA = obtenerICA(linea);
+        int nDia = contadorInverso(total, lineaActual);
+        fprintf(archSalida, "%s,%.2f,%d\n", linea, ICA, nDia);
+        lineaActual++;
+    }
+
+    fclose(baseDatos);
+    fclose(archSalida);
+}
+void procesarZona3() {
+    int total = contarLineas(BaseDeDatosZ3) - 1; // excluye encabezado
+    FILE *baseDatos = fopen(BaseDeDatosZ3, "r");
+    if (baseDatos == NULL) {
+        printf("Problema al abrir el archivo %s.\n", BaseDeDatosZ3);
+        exit(-1);
+    }
+
+    FILE *archSalida = fopen(ArchivoSalidaZ3, "w");
+    if (archSalida == NULL) {
+        printf("Problema al abrir el archivo %s.\n", ArchivoSalidaZ3);
+        exit(-1);
+    }
+
+    char linea[100];
+    fgets(linea, sizeof(linea), baseDatos); // Leer encabezado
+    linea[strcspn(linea, "\r\n")] = 0;
+    fprintf(archSalida, "%s,ICA,nDia\n", linea); // Escribir encabezado con ICA
+
+    int lineaActual = 0;
+    while (fgets(linea, sizeof(linea), baseDatos)) {
+        linea[strcspn(linea, "\r\n")] = 0;
+        float ICA = obtenerICA(linea);
+        int nDia = contadorInverso(total, lineaActual);
+        fprintf(archSalida, "%s,%.2f,%d\n", linea, ICA, nDia);
+        lineaActual++;
+    }
+
+    fclose(baseDatos);
+    fclose(archSalida);
+}
+void procesarZona4() {
+    int total = contarLineas(BaseDeDatosZ4) - 1; // excluye encabezado
+    FILE *baseDatos = fopen(BaseDeDatosZ4, "r");
+    if (baseDatos == NULL) {
+        printf("Problema al abrir el archivo %s.\n", BaseDeDatosZ4);
+        exit(-1);
+    }
+
+    FILE *archSalida = fopen(ArchivoSalidaZ4, "w");
+    if (archSalida == NULL) {
+        printf("Problema al abrir el archivo %s.\n", ArchivoSalidaZ4);
+        exit(-1);
+    }
+
+    char linea[100];
+    fgets(linea, sizeof(linea), baseDatos); // Leer encabezado
+    linea[strcspn(linea, "\r\n")] = 0;
+    fprintf(archSalida, "%s,ICA,nDia\n", linea); // Escribir encabezado con ICA
+
+    int lineaActual = 0;
+    while (fgets(linea, sizeof(linea), baseDatos)) {
+        linea[strcspn(linea, "\r\n")] = 0;
+        float ICA = obtenerICA(linea);
+        int nDia = contadorInverso(total, lineaActual);
+        fprintf(archSalida, "%s,%.2f,%d\n", linea, ICA, nDia);
+        lineaActual++;
+    }
+
+    fclose(baseDatos);
+    fclose(archSalida);
+}
+void procesarZona5() {
+    int total = contarLineas(BaseDeDatosZ5) - 1; // excluye encabezado
+    FILE *baseDatos = fopen(BaseDeDatosZ5, "r");
+    if (baseDatos == NULL) {
+        printf("Problema al abrir el archivo %s.\n", BaseDeDatosZ5);
+        exit(-1);
+    }
+
+    FILE *archSalida = fopen(ArchivoSalidaZ5, "w");
+    if (archSalida == NULL) {
+        printf("Problema al abrir el archivo %s.\n", ArchivoSalidaZ5);
+        exit(-1);
+    }
+
+    char linea[100];
+    fgets(linea, sizeof(linea), baseDatos); // Leer encabezado
+    linea[strcspn(linea, "\r\n")] = 0;
+    fprintf(archSalida, "%s,ICA,nDia\n", linea); // Escribir encabezado con ICA
+
+    int lineaActual = 0;
+    while (fgets(linea, sizeof(linea), baseDatos)) {
+        linea[strcspn(linea, "\r\n")] = 0;
+        float ICA = obtenerICA(linea);
+        int nDia = contadorInverso(total, lineaActual);
+        fprintf(archSalida, "%s,%.2f,%d\n", linea, ICA, nDia);
+        lineaActual++;
+    }
+
+    fclose(baseDatos);
+    fclose(archSalida);
+}
+void procesarZona6() {
+    int total = contarLineas(BaseDeDatosZ6) - 1; // excluye encabezado
+    FILE *baseDatos = fopen(BaseDeDatosZ6, "r");
+    if (baseDatos == NULL) {
+        printf("Problema al abrir el archivo %s.\n", BaseDeDatosZ6);
+        exit(-1);
+    }
+
+    FILE *archSalida = fopen(ArchivoSalidaZ6, "w");
+    if (archSalida == NULL) {
+        printf("Problema al abrir el archivo %s.\n", ArchivoSalidaZ6);
+        exit(-1);
+    }
+
+    char linea[100];
+    fgets(linea, sizeof(linea), baseDatos); // Leer encabezado
+    linea[strcspn(linea, "\r\n")] = 0;
+    fprintf(archSalida, "%s,ICA,nDia\n", linea); // Escribir encabezado con ICA
+
+    int lineaActual = 0;
+    while (fgets(linea, sizeof(linea), baseDatos)) {
+        linea[strcspn(linea, "\r\n")] = 0;
+        float ICA = obtenerICA(linea);
+        int nDia = contadorInverso(total, lineaActual);
+        fprintf(archSalida, "%s,%.2f,%d\n", linea, ICA, nDia);
+        lineaActual++;
+    }
+
+    fclose(baseDatos);
+    fclose(archSalida);
+}
+void procesarZona7() {
+    int total = contarLineas(BaseDeDatosZ7) - 1; // excluye encabezado
+    FILE *baseDatos = fopen(BaseDeDatosZ7, "r");
+    if (baseDatos == NULL) {
+        printf("Problema al abrir el archivo %s.\n", BaseDeDatosZ7);
+        exit(-1);
+    }
+
+    FILE *archSalida = fopen(ArchivoSalidaZ7, "w");
+    if (archSalida == NULL) {
+        printf("Problema al abrir el archivo %s.\n", ArchivoSalidaZ7);
+        exit(-1);
+    }
+
+    char linea[100];
+    fgets(linea, sizeof(linea), baseDatos); // Leer encabezado
+    linea[strcspn(linea, "\r\n")] = 0;
+    fprintf(archSalida, "%s,ICA,nDia\n", linea); // Escribir encabezado con ICA
+
+    int lineaActual = 0;
+    while (fgets(linea, sizeof(linea), baseDatos)) {
+        linea[strcspn(linea, "\r\n")] = 0;
+        float ICA = obtenerICA(linea);
+        int nDia = contadorInverso(total, lineaActual);
+        fprintf(archSalida, "%s,%.2f,%d\n", linea, ICA, nDia);
+        lineaActual++;
+    }
+
+    fclose(baseDatos);
+    fclose(archSalida);
+}
+int obtenerDia(char *lineaOriginal) {
+    char copia[200];
+    strcpy(copia, lineaOriginal);
+
+    char *token = strtok(copia, ",");
+    char *ultimo_token = NULL;
+
+    while (token != NULL) {
+        while (*token == ' ') token++;
+        ultimo_token = token;
+        token = strtok(NULL, ",");
+    }
+
+    if (ultimo_token != NULL) {
+        return atoi(ultimo_token);
+    } else {
+        return 0;
+    }
+}
+
+double obtenerPenultimo(char *lineaOriginal) {
+    char copia[1024];
+    strncpy(copia, lineaOriginal, sizeof(copia));
+    copia[sizeof(copia) - 1] = '\0';
+
+    char *token = strtok(copia, ",");
+    char *anterior = NULL;
+    char *actual = NULL;
+
+    while (token != NULL) {
+        while (*token == ' ') token++;
+        anterior = actual;
+        actual = token;
+        token = strtok(NULL, ",");
+    }
+
+    if (anterior != NULL) {
+        return atof(anterior);
+    } else {
+        return 0.0;
+    }
+}
+
+int regresionLineal() {
+    int opcion;
+    char *dirZona = NULL;
+
+A:
+    printf("===============================================\n");
+    printf("|        SELECCIONE LA ZONA A PROYECTAR       |\n");
+    printf("===============================================\n");
+    printf("|1. Belisario                                 |\n");
+    printf("|2. El camal                                  |\n");
+    printf("|3. Carapungo                                 |\n");
+    printf("|4. Centro Historico de Quito                 |\n");
+    printf("|5. Valle de los Chillos                      |\n");
+    printf("|6. Cotocollao                                |\n");
+    printf("|7. Tumbaco                                   |\n");
+    printf("===============================================\n");
+    printf("Ingrese su opcion: ");
+    scanf("%d", &opcion);
+
+    switch (opcion) {
+        case 1: dirZona = ArchivoSalidaZ1; break;
+        case 2: dirZona = ArchivoSalidaZ2; break;
+        case 3: dirZona = ArchivoSalidaZ3; break;
+        case 4: dirZona = ArchivoSalidaZ4; break;
+        case 5: dirZona = ArchivoSalidaZ5; break;
+        case 6: dirZona = ArchivoSalidaZ6; break;
+        case 7: dirZona = ArchivoSalidaZ7; break;
+        default:
+            printf("===============================================\n");
+            printf("|       OPCION INVALIDA. INGRESE DE NUEVO      |\n");
+            goto A;
+    }
+
+    int n = contarLineas(dirZona);
+    printf("Numero de lineas en el archivo: %d\n", n);
+
+    FILE *archivo = fopen(dirZona, "r");
+    if (archivo == NULL) {
+        printf("Problema al abrir el archivo %s. Fin del programa.\n", dirZona);
+        exit(-1);
+    }
+
+    char linea[200];
+    fgets(linea, sizeof(linea), archivo); // Leer encabezado
+
+    double sumDias = 0.0;
+    double sumICA = 0.0;
+    double sumXY = 0.0;
+    double sumXX = 0.0;
+
+    for (int i = 0; i < n - 1; i++) {
+        if (fgets(linea, sizeof(linea), archivo) == NULL) break;
+
+        int dia = obtenerDia(linea);
+        double ica = obtenerPenultimo(linea);
+
+        sumDias += dia;
+        sumICA += ica;
+        sumXY += dia * ica;
+        sumXX += dia * dia;
+    }
+    fclose(archivo);
+
+    // n de datos sin encabezado:
+    int ndatos = n - 1;
+    double a, b;
+
+    a = ((ndatos * sumXY) - (sumDias * sumICA)) / ((ndatos * sumXX) - (sumDias * sumDias));
+    b = (sumICA - (a * sumDias)) / ndatos;
+
+    printf("Ecuacion de para la regresion: y = %lf * x + %lf\n", a, b);
+
+    double y;
+    printf("Ingrese valor para predecir ICA (dia): ");
+    scanf("%lf", &y);
+
+    double prediccion = a * y + b;
+    printf("Valor predicho de ICA para dia %.2lf: %.4lf\n", y, prediccion);
+
+    return 0;
 }

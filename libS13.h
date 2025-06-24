@@ -47,7 +47,7 @@ typedef enum {
     float obtenerICA(char *lineaOriginal);
     int regresionLinealAutomatica(int zonaSeleccionada, int diferenciaDias,int añoPrediccion,int mesPrediccion,int diaPrediccion);
     float obtenerPromedioUlt30(int zonaSeleccionada);float obtenerPromedioUlt30(int zonaSeleccionada);
-//DIRECCIONES DE ARCHIVOS revisarle para que corra en cualquier commpu
+//DIRECCIONES DE ARCHIVOS CARPETA BASES DE DATOS
     char BaseDeDatosZ1[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS/BELISARIO.csv";
     char ArchivoSalidaZ1[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\BELISARIO_PROCESADO.csv";
     char BaseDeDatosZ2[] = "C:\\Users\\USUARIO\\Desktop\\ProyectoFinalS13\\BASES DE DATOS\\CENTRO.csv";
@@ -125,6 +125,7 @@ char* obtenerArchivoZonaPrediccion(int *zonaSeleccionada) {
             return NULL;
     }
 }
+//DIRECCIONES DE ARCHIVOS CARPETA ARCHIVOS POR DIA
 char* obtenerArchivoZona(ZonasMonitoreo zona) {
     switch(zona) {
         case BELISARIO:
